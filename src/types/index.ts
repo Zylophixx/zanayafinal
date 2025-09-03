@@ -12,6 +12,7 @@ export interface KitItem {
   price: number;
   required: boolean;
   category: 'essential' | 'regional' | 'caste';
+  mutuallyExclusive?: string; // Group ID for mutually exclusive items
 }
 
 export interface Service {

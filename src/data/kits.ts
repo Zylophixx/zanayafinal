@@ -15,7 +15,8 @@ const hinduItems: KitItem[] = [
 
 const muslimItems: KitItem[] = [
   // Essential items
-  { id: 'm1', name: 'Kafan (Shroud)', description: 'White cotton burial shroud', price: 800, required: true, category: 'essential' },
+  { id: 'm1-male', name: 'Kafan - Male', description: 'White cotton burial shroud for men (3 pieces)', price: 800, required: true, category: 'essential', mutuallyExclusive: 'kafan' },
+  { id: 'm1-female', name: 'Kafan - Female', description: 'White cotton burial shroud for women (5 pieces)', price: 900, required: true, category: 'essential', mutuallyExclusive: 'kafan' },
   { id: 'm2', name: 'Camphor', description: 'For purification rituals', price: 50, required: true, category: 'essential' },
   { id: 'm3', name: 'Rose Water', description: 'For cleansing and fragrance', price: 100, required: true, category: 'essential' },
   { id: 'm4', name: 'Cotton Wool', description: 'For body preparation', price: 80, required: true, category: 'essential' },

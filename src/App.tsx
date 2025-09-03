@@ -50,7 +50,18 @@ function App() {
     if (bookingData.religion) {
       const kit = religionKits.find(k => k.religionId === bookingData.religion?.id);
       if (kit) {
-        const essentialItems = kit.items.filter(item => item.required);
+        // For Muslim religion, auto-select male kafan by default, otherwise select all required items
+        const essentialItems = kit.items.filter(item => {
+          if (item.required) {
+            // For mutually exclusive items, select the first one (male kafan for Muslims)
+            if (item.mutuallyExclusive) {
+              const groupItems = kit.items.filter(i => i.mutuallyExclusive === item.mutuallyExclusive);
+              return groupItems[0].id === item.id;
+            }
+            return true;
+          }
+          return false;
+        });
         setBookingData(prev => ({
           ...prev,
           selectedKitItems: essentialItems

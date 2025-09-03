@@ -10,6 +10,26 @@ interface KitSelectorProps {
 }
 
 export function KitSelector({ religion, availableItems, selectedItems, onToggleItem }: KitSelectorProps) {
+  // Handle mutually exclusive items
+  const handleItemToggle = (item: KitItem) => {
+    if (item.mutuallyExclusive) {
+      // If this is a mutually exclusive item, first remove any other items in the same group
+      const otherItemsInGroup = availableItems.filter(
+        otherItem => otherItem.mutuallyExclusive === item.mutuallyExclusive && otherItem.id !== item.id
+      );
+      
+      // Remove other items in the group from selection
+      otherItemsInGroup.forEach(otherItem => {
+        if (selectedItems.some(selected => selected.id === otherItem.id)) {
+          onToggleItem(otherItem);
+        }
+      });
+    }
+    
+    // Then toggle the current item
+    onToggleItem(item);
+  };
+
   const essentialItems = availableItems.filter(item => item.category === 'essential');
   const regionalItems = availableItems.filter(item => item.category === 'regional');
   const casteItems = availableItems.filter(item => item.category === 'caste');
@@ -18,13 +38,21 @@ export function KitSelector({ religion, availableItems, selectedItems, onToggleI
 
   const ItemCard = ({ item, canToggle = true }: { item: KitItem; canToggle?: boolean }) => {
     const selected = isSelected(item);
+    const isMutuallyExclusive = item.mutuallyExclusive;
+    const isOtherInGroupSelected = isMutuallyExclusive && 
+      availableItems.some(otherItem => 
+        otherItem.mutuallyExclusive === item.mutuallyExclusive && 
+        otherItem.id !== item.id && 
+        isSelected(otherItem)
+      );
     
     return (
       <div
         className={`bg-white rounded-lg p-4 border-2 transition-all duration-300 ${
-          selected ? 'border-green-500 shadow-md' : 'border-gray-200'
+          selected ? 'border-green-500 shadow-md' : 
+          isOtherInGroupSelected ? 'border-gray-200 opacity-50' : 'border-gray-200'
         } ${canToggle ? 'cursor-pointer hover:shadow-md hover:border-blue-300' : 'opacity-75'}`}
-        onClick={canToggle ? () => onToggleItem(item) : undefined}
+        onClick={canToggle ? () => handleItemToggle(item) : undefined}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -33,6 +61,11 @@ export function KitSelector({ religion, availableItems, selectedItems, onToggleI
               {item.required && (
                 <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
                   Required
+                </span>
+              )}
+              {item.mutuallyExclusive && (
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  Choose One
                 </span>
               )}
             </div>
