@@ -12,6 +12,19 @@ interface KitSelectorProps {
 export function KitSelector({ religion, availableItems, selectedItems, onToggleItem }: KitSelectorProps) {
   // Handle mutually exclusive items
   const handleItemToggle = (item: KitItem) => {
+    // Don't allow toggling if it's required and mutually exclusive but none is selected
+    if (item.required && item.mutuallyExclusive) {
+      const groupItems = availableItems.filter(
+        otherItem => otherItem.mutuallyExclusive === item.mutuallyExclusive
+      );
+      const hasSelectedInGroup = groupItems.some(groupItem => isSelected(groupItem));
+      
+      // If trying to deselect the only selected item in a required group, prevent it
+      if (hasSelectedInGroup && isSelected(item) && groupItems.filter(groupItem => isSelected(groupItem)).length === 1) {
+        return; // Don't allow deselecting the last item in a required group
+      }
+    }
+    
     if (item.mutuallyExclusive) {
       // If this is a mutually exclusive item, first remove any other items in the same group
       const otherItemsInGroup = availableItems.filter(
@@ -46,13 +59,16 @@ export function KitSelector({ religion, availableItems, selectedItems, onToggleI
         isSelected(otherItem)
       );
     
+    // For required mutually exclusive items, always allow toggling
+    const actualCanToggle = item.required && item.mutuallyExclusive ? true : canToggle;
+    
     return (
       <div
         className={`bg-white rounded-lg p-4 border-2 transition-all duration-300 ${
           selected ? 'border-green-500 shadow-md' : 
           isOtherInGroupSelected ? 'border-gray-200 opacity-50' : 'border-gray-200'
-        } ${canToggle ? 'cursor-pointer hover:shadow-md hover:border-blue-300' : 'opacity-75'}`}
-        onClick={canToggle ? () => handleItemToggle(item) : undefined}
+        } ${actualCanToggle ? 'cursor-pointer hover:shadow-md hover:border-blue-300' : 'opacity-75'}`}
+        onClick={actualCanToggle ? () => handleItemToggle(item) : undefined}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -73,7 +89,7 @@ export function KitSelector({ religion, availableItems, selectedItems, onToggleI
             <p className="font-bold text-lg text-blue-600">₹{item.price}</p>
           </div>
           <div className="ml-4">
-            {item.required ? (
+            {item.required && !item.mutuallyExclusive ? (
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                 <Check size={16} className="text-white" />
               </div>
@@ -107,11 +123,14 @@ export function KitSelector({ religion, availableItems, selectedItems, onToggleI
       <div className="mb-8">
         <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-          Essential Items (Included)
+          Essential Items
         </h3>
+        <p className="text-gray-600 text-sm mb-4">
+          These items are required for the ceremony. Please select all required items.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {essentialItems.map((item) => (
-            <ItemCard key={item.id} item={item} canToggle={false} />
+            <ItemCard key={item.id} item={item} canToggle={item.mutuallyExclusive ? true : false} />
           ))}
         </div>
       </div>
